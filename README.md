@@ -30,6 +30,8 @@ npm install express mysql2 cors body-parser
 
 - 数据库构建
    创建init.sql
+   打开HeidiSQL工具，文件 -- 运行SQL文件 -- 选择init.sql打开，会执行其中的命令，创建数据库和表，并插入admin/1234作为管理员
+
 
 - 跨域配置
   前端地址：http://localhost:5173（Vite默认开发服务器地址）
