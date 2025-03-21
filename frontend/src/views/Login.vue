@@ -25,32 +25,13 @@
   const form = reactive({ username: '', password: '' })
   const router = useRouter()
 
-  /* admin/1234 登录，无需后端接口
-  const handleLogin = () => {
-    try {
-      let response;
-      if (form.username === 'admin' && form.password === '1234') {
-        response = { data: { success: true } };
-      } else {
-        response = { data: { success: false } };
-      }
-      if (response.data.success) {
-        ElMessage.success('登录成功');
-        router.push('/'); // 跳转到后台首页
-      } else {
-        ElMessage.error('用户名或密码错误');
-      }
-    } catch (err) {
-      ElMessage.error('登录失败!');
-    }
-  };
-  */
-  // 使用后端接口登录
+
   const handleLogin = async () => {
   try {
     const response = await axios.post('http://localhost:3000/api/login', form)
     if (response.data.success) {
       ElMessage.success('登录成功')
+      // router.push('/dashboard') // TODO: 跳转到后台首页
     } else {
       ElMessage.error('用户名或密码错误')
     }

@@ -1,4 +1,4 @@
-# 志愿者服务管理前端
+# 志愿者服务管理系统
 
 ## 项目简介
 志愿者服务管理系统的前端、后端、数据库，提供用户友好的界面，用于管理志愿者活动、用户信息等。
@@ -80,6 +80,7 @@ npm install express mysql2 cors body-parser
 ## 使用
 1. 启动开发服务器：
    ```bash
+   cd volunteer-system/
    npm run dev
    ```
 2. 打开浏览器访问：
@@ -87,7 +88,47 @@ npm install express mysql2 cors body-parser
    http://localhost:5173
    ```
 
+也可以单独启动前端、后端（两个终端），每次修改backend后需要重启backend：
+```bash
+cd volunteer-system/
+node ./backend/app.js
+```
 
+```bash
+cd frontend
+npm run dev
+```
+
+## 说明
+### 前端、后端、数据库对接流程
+1. 首先，需要确保跨域配置, 在 backend/app.js 中正确配置了CORS：
+```bash
+const cors = require('cors')
+
+app.use(cors())   // 允许所有来源跨域（开发环境）
+
+// 生产环境推荐限制来源
+// app.use(cors({
+//   origin: 'http://your-frontend-domain.com'
+// }))
+```
+前端使用如下URL对接：
+```bash
+const response = await axios.post('http://localhost:3000/api/login', form)
+```
+2. 对接流程，以登录为例：
+```mermaid
+sequenceDiagram
+    participant 前端
+    participant 后端
+    participant 数据库
+
+    前端->>后端: POST /api/login {username, password}
+    后端->>数据库: SELECT * FROM volunteers WHERE username = ? AND password = ?
+    数据库-->>后端: 查询结果
+    后端-->>前端: { success: true/false }
+    前端->>前端: 根据响应结果跳转或提示错误
+```
 
 ## 许可证
 此项目遵循 [MIT 许可证](LICENSE)。

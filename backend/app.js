@@ -18,30 +18,33 @@ const pool = mysql.createPool({
   queueLimit: 0
 })
 
-/* 模拟数据库
-let volunteers = [
-  { id: 1, username: 'admin', password: '1234' }
-
-  app.post('/api/login', (req, res) => {
-  const { username, password } = req.body
-  const user = volunteers.find(u => u.username === username && u.password === password)
-  res.json(user ? { success: true } : { success: false })
-})
-]*/
-
-/* SQL 真是数据库登录接口
+/* SQL 数据库登录接口 */
 app.post('/api/login', async (req, res) => {
-  const [rows] = await pool.query(
-    'SELECT * FROM admin WHERE username = ? AND password = ?',
-    [req.body.username, req.body.password]
-  )
-  res.json({ success: rows.length > 0 })
+  console.log('进入了backend:','req.body:', req.body)
+  const { username, password } = req.body
+
+  // 从SQL数据库中查找用户
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM admin WHERE username = ? AND password = ?',
+      [username, password]
+    )
+    if (rows.length > 0) {
+      res.json({ success: true, user: rows[0] })
+      console.log('back 登录成功')
+    } else {
+      res.json({ success: false, message: 'back 用户名或密码错误' })
+    }
+  }
+  catch (err) {
+    res.status(500).json({ success: false, message: '服务器内部错误' })
+  }
 })
-  */
 
 
 
-// 定义路由（pool已可用）
+
+/* 定义路由（pool已可用）
 // 添加测试接口, 返回JASON 格式的 volunteers中的 admin 数组
 // 浏览器访问 http://localhost:3000/api/test-db 查看
 app.get('/api/test-db', async (req, res) => {
@@ -52,6 +55,8 @@ app.get('/api/test-db', async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 })
+  */
+
 
 
 app.listen(3000, () => {
