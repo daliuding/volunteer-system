@@ -1,9 +1,11 @@
 <template>
-  <el-container class="login-container">
-    <el-main>
-      <el-card class="login-card"><h2>管理员登录</h2>
-        <el-form :model="form" label-width="80px">
-          <el-form-item label="用户名" size="large">
+  <el-container class="common-layout" >
+      <el-header>大连图书馆志愿服务系统</el-header>
+    <el-main style="width: 40%; margin: 0 auto;">
+      <el-card class="login-card">
+        <h2>管理员登录</h2>
+        <el-form :model="form" label-width="auto" style="max-width: 400px; margin: 0 auto;">
+          <el-form-item label="用户名" size="large" font-size="20px">
             <el-input v-model="form.username" size="large"/>
           </el-form-item>
           <el-form-item label="密码">
@@ -31,7 +33,7 @@
     const response = await axios.post('http://localhost:3000/api/login', form)
     if (response.data.success) {
       ElMessage.success('登录成功')
-      // router.push('/dashboard') // TODO: 跳转到后台首页
+      router.push('/dashboard') // TODO: 跳转到后台首页
     } else {
       ElMessage.error('用户名或密码错误')
     }
@@ -43,17 +45,12 @@
 
 </script>
 
-  <style scoped>
-  .login-container {
-  top: 0;
-  left: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  }
- 
+<style scoped>
+.el-header {
+  background-color: #409EFF;
+  color: white;
+  line-height: 60px;
+  font-size: 36px;
+}
 
-  .login-card {
-    width: 400px;
-  }
-  </style>
+</style>
