@@ -32,6 +32,8 @@
   try {
     const response = await axios.post('http://localhost:3000/api/login', form)
     if (response.data.success) {
+      // 服务器反馈令牌token
+      localStorage.setItem('userToken', response.data.token) // 将token保存到本地存储
       ElMessage.success('登录成功')
       router.push('/dashboard') // 跳转到后台首页
     } else {

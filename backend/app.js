@@ -30,13 +30,17 @@ app.post('/api/login', async (req, res) => {
       [username, password]
     )
     if (rows.length > 0) {
-      res.json({ success: true, user: rows[0] })
-      console.log('back 登录成功')
+      // 用户验证成功，生成简单 token（token-用户名-时间戳），不依赖外部库 jsonwebtoken
+      const token = `token-${rows[0].username}-${Date.now()}`; // 简单拼接生成 token
+
+      res.json({ success: true, token })  // 返回 token 给前端
+      console.log('后端登录成功, 生成 token:', token)
     } else {
       res.json({ success: false, message: 'back 用户名或密码错误' })
     }
   }
   catch (err) {
+    console.error('数据库查询出错:', err.message);
     res.status(500).json({ success: false, message: '服务器内部错误' })
   }
 })
