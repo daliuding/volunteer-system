@@ -27,6 +27,12 @@ mkdir frontend backend database
 ```bash
 cd frontend  && npm create vue@latest 
 npm install element-plus axios 
+npm install @element-plus/icons-vue 
+```
+
+完整引入element-plus in main.js
+```bash
+import 'element-plus/dist/index.css'
 ```
 
 修改vite.config.js支持跨域
