@@ -6,8 +6,8 @@
         <el-form-item label="姓名" prop="name">
           <el-input v-model="registerForm.name" placeholder="请输入真实姓名"></el-input>
         </el-form-item>
-        <el-form-item label="身份证号" prop="idCard">
-          <el-input v-model="registerForm.idCard" placeholder="请输入身份证号"></el-input>
+        <el-form-item label="身份证号" prop="id_card">
+          <el-input v-model="registerForm.id_card" placeholder="请输入身份证号"></el-input>
         </el-form-item>
         <el-form-item label="年龄" prop="age">
           <el-input v-model="registerForm.age" placeholder="请输入年龄"></el-input>
@@ -26,10 +26,15 @@
   
   <script setup>
   import { reactive, ref } from 'vue'
+  import axios from 'axios'
+  import { ElMessage } from 'element-plus'
+  import { useRouter } from 'vue-router'
+
+  const router = useRouter()
 
   const registerForm = reactive({
-    username: '',
-    idCard: '',
+    name: '',
+    id_card: '',
     age: '',
     phone: ''
   })
@@ -38,7 +43,7 @@
     name: [
       { required: true, message: '请输入真实姓名', trigger: 'blur' }
     ],
-    idCard: [
+    id_card: [
       { required: true, message: '请输入身份证号', trigger: 'blur' }
     ],
     age: [
@@ -55,7 +60,7 @@
       const response = await axios.post('http://localhost:3000/api/register',
         {
           name: registerForm.name,
-          idCard: registerForm.idCard,
+          id_card: registerForm.id_card,
           age: registerForm.age,
           phone: registerForm.phone
         }
@@ -63,7 +68,7 @@
 
       if (response.data.success) {
         ElMessage.success('用户注册成功')
-        router.push('/dashboard') // 跳转到后台首页
+        router.push('/dashboard') // 跳转回后台首页
       } else {
         ElMessage.error('用户注册失败')
       }
@@ -75,7 +80,7 @@
 
   const resetForm = () => {
     registerForm = {
-      username: '',
+      name: '',
       idCard: '',
       age: '',
       phone: ''

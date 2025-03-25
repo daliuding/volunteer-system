@@ -45,7 +45,41 @@ app.post('/api/login', async (req, res) => {
   }
 })
 
+// 志愿者注册接口
+app.post('/api/register', async (req, res) => {
+  const { name, id_card, age, phone } = req.body
 
+  try {
+    // 检查身份证是否已注册
+    const [idCardCheck] = await pool.query(
+      'SELECT id FROM volunteers WHERE id_card = ?',
+      [id_card]
+    )
+    if (idCardCheck.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: '该身份证已注册'
+      })
+    }
+
+    // 插入新用户
+    const [result] = await pool.query(
+      'INSERT INTO volunteers (name, id_card, age, phone) VALUES (?, ?, ?, ?)',
+      [name, id_card, age, phone]
+    )
+
+    res.json({
+      success: true,
+      userId: result.insertId
+    })
+  } catch (err) {
+    console.error('注册失败:', err)
+    res.status(500).json({
+      success: false,
+      message: '服务器内部错误'
+    })
+  }
+})
 
 
 /* 定义路由（pool已可用）
