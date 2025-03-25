@@ -1,7 +1,8 @@
 <template>
     <el-card class="register-container">
       <h2>用户注册</h2>
-      <el-form :model="registerForm" :rules="rules" ref="registerFormRef">
+      <el-form :model="registerForm" :rules="rules" ref="registerFormRef" 
+        label-width="auto" label-position="left">
         <el-form-item label="姓名" prop="name">
           <el-input v-model="registerForm.name" placeholder="请输入真实姓名"></el-input>
         </el-form-item>
@@ -24,7 +25,6 @@
   </template>
   
   <script setup>
-  // 将用户信息注册到数据库
   import { reactive, ref } from 'vue'
 
   const registerForm = reactive({
@@ -35,7 +35,7 @@
   })
 
   const rules = {
-    username: [
+    name: [
       { required: true, message: '请输入真实姓名', trigger: 'blur' }
     ],
     idCard: [
@@ -86,10 +86,7 @@
   
   <style scoped>
   .register-container {
-    width: 40%;
-    display: flex;
-    flex-direction: column;
-    margin: 50px auto;
-    padding: 20px;
+    width: 50%;
+    margin: 0 auto;
   }
   </style>
