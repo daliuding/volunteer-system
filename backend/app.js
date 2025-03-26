@@ -81,6 +81,52 @@ app.post('/api/register', async (req, res) => {
   }
 })
 
+// 查询所有志愿者接口
+app.get('/api/volunteers', async (req, res) => {
+  try {
+    const [rows] = await pool.query('SELECT * FROM volunteers')
+    res.json({
+      success: true,
+      data: rows
+    })
+  } catch (err) {
+    console.error('查询志愿者信息失败:', err)
+    res.status(500).json({
+      success: false,
+      message: '服务器内部错误'
+    })
+  }
+})
+
+// 查询指定志愿者姓名的接口
+app.get('/api/volunteer/:name', async (req, res) => {
+  const { name } = req.params
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM volunteers WHERE name = ?',
+      [name]
+    )
+    if (rows.length > 0) {
+      res.json({
+        success: true,
+        data: rows
+      })
+    } else {
+      res.status(404).json({
+        success: false,
+        message: '未找到匹配的志愿者'
+      })
+    }
+  } catch (err) {
+    console.error('查询志愿者信息失败:', err)
+    res.status(500).json({
+      success: false,
+      message: '服务器内部错误'
+    })
+  }
+})
+
 
 /* 定义路由（pool已可用）
 // 添加测试接口, 返回JASON 格式的 volunteers中的 admin 数组

@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Dashboard from '../views/Dashboard.vue'
 import Register from '../views/dashboard/Register.vue'
+import Query from '../views/dashboard/Query.vue'
 
 const routes = [
   { path: '/', redirect: '/login' },
@@ -11,6 +12,10 @@ const routes = [
         {
           path: '/register',
           component: Register
+        },
+        {
+          path: '/query',
+          component: Query
         }
       ]
    }
