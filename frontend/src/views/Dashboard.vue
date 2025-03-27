@@ -28,7 +28,13 @@
 
     <!-- 主内容区 -->
     <el-container id="main">
-      <el-header>大连图书馆管理系统</el-header>
+      <el-header>
+        <span>大连市图书馆志愿者服务管理</span>
+        <div class="login-status">
+          <span>当前登录: {{ loggedInUser }}</span>
+          <el-button @click="logout" >退出登录</el-button>
+        </div>
+      </el-header>
       <div class="main-container flex">
         <div>
           <RouterView />
@@ -49,6 +55,14 @@ const router = useRouter()
 const handleMenuSelect = (index) => {
   router.push(index)
 };
+
+const loggedInUser = localStorage.getItem('username')
+
+const logout = () => {
+  localStorage.removeItem('userToken')
+  localStorage.removeItem('username')
+  router.push('/login')
+}
 </script>
 
 <style scoped>
@@ -61,10 +75,21 @@ const handleMenuSelect = (index) => {
   color: white;
   line-height: 60px;
   font-size: 26px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
 }
 
 .main-container {
   padding: 40px;
+}
+
+.login-status {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  gap: 10px;
 }
 
 </style>

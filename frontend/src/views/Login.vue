@@ -34,6 +34,7 @@
     if (response.data.success) {
       // 服务器反馈令牌token
       localStorage.setItem('userToken', response.data.token) // 将token保存到本地存储
+      localStorage.setItem('username', form.username) // 将用户名保存到本地存储,logout时使用
       ElMessage.success('登录成功')
       router.push('/dashboard') // 跳转到后台首页
     } else {
