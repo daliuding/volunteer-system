@@ -127,20 +127,31 @@ app.get('/api/volunteer/:name', async (req, res) => {
   }
 })
 
-
-/* 定义路由（pool已可用）
-// 添加测试接口, 返回JASON 格式的 volunteers中的 admin 数组
-// 浏览器访问 http://localhost:3000/api/test-db 查看
-app.get('/api/test-db', async (req, res) => {
+/*
+ * 志愿者服务管理接口, 包括：服务签到、服务记录查询
+ */
+// 提交服务记录
+app.post('/api/service-registery', async (req, res) => {
+  const { volunteer_id, service_date, start_time, end_time, content } = req.body
   try {
-    const [rows] = await pool.query('SELECT * FROM admin')
-    res.json(rows)
+    // 验证时间有效性
+    if (start_time >= end_time) {
+      return res.status(400).json({ error: '结束时间必须晚于开始时间' })
+    }
+    const [result] = await pool.query(
+      `INSERT INTO service_records
+        (volunteer_id, service_date, start_time, end_time, content)
+      VALUES (?, ?, ?, ?, ?)`,
+      [volunteer_id, service_date, start_time, end_time, content]
+    )
+    res.json({
+      success: true,
+      recordId: result.insertId
+    })
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: '服务记录创建失败' })
   }
 })
-  */
-
 
 
 app.listen(3000, () => {

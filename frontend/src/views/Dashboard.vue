@@ -3,7 +3,7 @@
     <el-aside width="300px">
       <h4 class="mb-2">志愿者管理</h4>
       <el-menu
-        :default-active= "$route.path === '/dashboard'? '/register' : $route.path"
+        :default-active= "$route.path === '/dashboard'? '/service-register' : $route.path"
         class="el-menu-vertical-demo"
         router
         @select="handleMenuSelect"
@@ -17,10 +17,14 @@
           <el-menu-item index="/query">用户查询</el-menu-item>
       </el-sub-menu>
 
-      <el-menu-item index="/checkin">
-        <el-icon><IconMenu /></el-icon>
-        <span>志愿服务签到</span>
-      </el-menu-item>
+      <el-sub-menu index="/service">
+        <template #title>
+          <el-icon size="large"><IconMenu /></el-icon>
+          <span style="font-size: 17.5px;">志愿服务管理</span>
+        </template>
+          <el-menu-item index="/service-registery">服务登记</el-menu-item>
+          <el-menu-item index="/service-query">服务查询</el-menu-item>
+      </el-sub-menu>
       </el-menu>   
     </el-aside>
 

@@ -16,6 +16,10 @@ const routes = [
         {
           path: '/query',
           component: Query
+        },
+        {
+          path: '/service-registery',
+          component: () => import('../views/dashboard/ServiceRegister.vue')
         }
       ]
    }
