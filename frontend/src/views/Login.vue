@@ -1,8 +1,8 @@
 <template>
-  <el-container class="common-layout" >
+  <el-container class="common-layout">
       <el-header>大连图书馆志愿服务系统</el-header>
     <el-main style="width: 40%; margin: 0 auto;">
-      <el-card class="login-card">
+      <el-card class="login-card" style="margin: 40px auto;">
         <h2>管理员登录</h2>
         <el-form :model="form" label-width="auto" style="max-width: 400px; margin: 0 auto;">
           <el-form-item label="用户名" size="large" font-size="20px">

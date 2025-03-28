@@ -3,20 +3,18 @@
     <el-aside width="300px">
       <h4 class="mb-2">志愿者管理</h4>
       <el-menu
-        :default-active="$route.path"
+        :default-active= "$route.path === '/dashboard'? '/register' : $route.path"
         class="el-menu-vertical-demo"
         router
         @select="handleMenuSelect"
       >
-      <el-sub-menu index="user-management">
+      <el-sub-menu index="/user">
         <template #title>
-          <el-icon><User /></el-icon>
-          <span>用户管理</span>
+          <el-icon size="large"><User /></el-icon>
+          <span style="font-size: 18px;">用户管理</span>
         </template>
-        <el-menu-item-group title="Group One">
           <el-menu-item index="/register">用户注册</el-menu-item>
           <el-menu-item index="/query">用户查询</el-menu-item>
-        </el-menu-item-group>
       </el-sub-menu>
 
       <el-menu-item index="/checkin">
@@ -79,6 +77,10 @@ const logout = () => {
   justify-content: space-between;
   align-items: center;
   padding: 0 20px;
+}
+
+.el-menu-item {
+  font-size: 16.5px;
 }
 
 .main-container {
