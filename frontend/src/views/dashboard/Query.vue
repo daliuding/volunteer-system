@@ -16,25 +16,29 @@
                         <el-option
                             v-for="volunteer in volunteerList"
                             :key="volunteer.id"
-                            :label="volunteer?.name || ''"
-                            :value="volunteer?.name || ''"
+                            :label="volunteer?.real_name || ''"
+                            :value="volunteer?.real_name || ''"
                         ></el-option>
                     </el-select>
                 </el-form-item>
             </el-form>
             <el-table v-if="volunteerData" :data="volunteerData" style="width: 100%">
-                <el-table-column prop="id" label="ID" width="80"></el-table-column>
-                <el-table-column prop="name" label="姓名"></el-table-column>
-                <el-table-column prop="id_card" label="身份证号"></el-table-column>
-                <el-table-column prop="age" label="年龄"></el-table-column>
-                <el-table-column prop="phone" label="电话"></el-table-column>
+                <el-table-column prop="real_name" label="姓名"></el-table-column>
+                <el-table-column prop="gender" label="性别"></el-table-column>
+                <el-table-column prop="mobile" label="电话"></el-table-column>
+                <el-table-column prop="wechat" label="微信"></el-table-column>
+                <el-table-column prop="political_status" label="政治面貌"></el-table-column>
+                <el-table-column prop="education" label="学历"></el-table-column>
+                <el-table-column prop="specialties" label="特长" ></el-table-column>
             </el-table>
             <el-table v-else :data="volunteerList? volunteerList :[]" style="width: 100%">
-                <el-table-column prop="id" label="ID" width="80"></el-table-column>
-                <el-table-column prop="name" label="姓名"></el-table-column>
-                <el-table-column prop="id_card" label="身份证号"></el-table-column>
-                <el-table-column prop="age" label="年龄"></el-table-column>
-                <el-table-column prop="phone" label="电话"></el-table-column>
+                <el-table-column prop="real_name" label="姓名"></el-table-column>
+                <el-table-column prop="gender" label="性别"></el-table-column>
+                <el-table-column prop="mobile" label="电话"></el-table-column>
+                <el-table-column prop="wechat" label="微信"></el-table-column>
+                <el-table-column prop="education" label="学历"></el-table-column>
+                <el-table-column prop="political_status" label="政治面貌"></el-table-column>
+                <el-table-column prop="specialties" label="特长"></el-table-column>
             </el-table>
         </el-card>
     </div>

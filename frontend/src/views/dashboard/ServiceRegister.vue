@@ -20,8 +20,8 @@
               <el-option
                 v-for="volunteer in volunteerList"
                 :key="volunteer.id"
-                :label="volunteer.name"
-                :value="volunteer.name"
+                :label="volunteer.real_name"
+                :value="volunteer.real_name"
               />
             </el-select>
           </el-form-item>
@@ -66,7 +66,7 @@
               v-model="form.content"
               type="textarea"
               :rows="4"
-              placeholder="服务内容描述"
+              placeholder="服务内容描述, 至少输入1个字符"
             />
           </el-form-item>
   
@@ -86,7 +86,7 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, reactive } from 'vue'
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
   
@@ -95,7 +95,7 @@
   const volunteerList = ref([])
   
   // 表单数据
-  const form = ref({
+  const form = reactive({
     volunteer_name: '',
     service_date: '',
     start_time: '',
@@ -112,13 +112,13 @@
       { required: true, message: '请选择服务日期', trigger: 'blur' }
     ],
     start_time: [
-      { required: true, message: '请选择开始时间', trigger: 'blur' }
+      { required: true, message: '请选择开始时间', trigger: 'blur' },
     ],
     end_time: [
       { required: true, message: '请选择结束时间', trigger: 'blur' },
       {
         validator: (rule, value, callback) => {
-          if (form.value.start_time && value <= form.value.start_time) {
+          if (form.start_time && value <= form.start_time) {
             callback(new Error('结束时间必须晚于开始时间'))
           } else {
             callback()
@@ -129,7 +129,7 @@
     ],
     content: [
       { required: true, message: '请输入服务内容', trigger: 'blur' },
-      { min: 10, message: '至少输入10个字符', trigger: 'blur' }
+      { min: 1, message: '至少输入1个字符', trigger: 'blur' }
     ]
   }
   
@@ -144,6 +144,10 @@
       ElMessage.error('加载志愿者列表失败')
     }
   }
+
+  onMounted(() => {
+    loadVolunteers()
+});
   
   // 提交表单
   const submitForm = async () => {
@@ -151,18 +155,22 @@
       submitting.value = true
 
       // 根据volunteer.name获取volunteer_id
-      const volunteer = volunteerList.value.find(v => v.name === form.value.volunteer_name)
+      const volunteer = volunteerList.value.find(v => v.real_name === form.volunteer_name)
       if (!volunteer) {
         ElMessage.error('请选择志愿者')
+        return
+      }
+      if (!form.start_time || !form.end_time) {
+        ElMessage.error('请选择服务时间段')
         return
       }
       // 不需要发送name数据，后端直接用id来插入记录
       const response = await axios.post('http://localhost:3000/api/service-registery', {
         volunteer_id: volunteer.id,
-        service_date: form.value.service_date,
-        start_time: form.value.start_time,
-        end_time: form.value.end_time,
-        content: form.value.content
+        service_date: form.service_date,
+        start_time: form.start_time,
+        end_time: form.end_time,
+        content: form.content
       })
   
       if (response.data.success) {

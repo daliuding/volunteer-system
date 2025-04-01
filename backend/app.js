@@ -20,7 +20,6 @@ const pool = mysql.createPool({
 
 /* SQL 数据库登录接口 */
 app.post('/api/login', async (req, res) => {
-  console.log('进入了backend:','req.body:', req.body)
   const { username, password } = req.body
 
   // 从SQL数据库中查找用户
@@ -34,7 +33,6 @@ app.post('/api/login', async (req, res) => {
       const token = `token-${rows[0].username}-${Date.now()}`; // 简单拼接生成 token
 
       res.json({ success: true, token })  // 返回 token 给前端
-      console.log('后端登录成功, 生成 token:', token)
     } else {
       res.json({ success: false, message: 'back 用户名或密码错误' })
     }
@@ -47,27 +45,52 @@ app.post('/api/login', async (req, res) => {
 
 // 志愿者注册接口
 app.post('/api/register', async (req, res) => {
-  const { name, id_card, age, phone } = req.body
-
   try {
-    // 检查身份证是否已注册
-    const [idCardCheck] = await pool.query(
-      'SELECT id FROM volunteers WHERE id_card = ?',
-      [id_card]
-    )
-    if (idCardCheck.length > 0) {
+    // 验证身份证号(非必填项)
+    if (req.body.id_card) {
+      if (req.body.id_card && !/^\d{17}[\dX]$/i.test(req.body.id_card)) {
+        return res.status(400).json({ error: '身份证格式错误' })
+      }
+      // 检查身份证是否已注册
+      const [idCardCheck] = await pool.query(
+        'SELECT id FROM volunteers WHERE id_card = ?',
+        [req.body.id_card]
+      )
+      if (idCardCheck.length > 0) {
+        return res.status(400).json({
+          success: false,
+          message: '该身份证已注册'
+        })
+      }
+    } else {
+      req.body.id_card = null;
+    }
+    if (req.body.gender === '') {
+      req.body.gender = null;
+    }
+    // 检查 birth_date 字段，如果为空则设置为 null，否则数据库报错
+    if (req.body.birth_date === '') {
+      req.body.birth_date = null;
+    }
+    // 验证JSON字段
+    try {
+      JSON.parse(req.body.specialties)
+      JSON.parse(req.body.experiences)
+    } catch (e) {
       return res.status(400).json({
         success: false,
-        message: '该身份证已注册'
+        error: 'JSON数据格式错误'
       })
     }
-
     // 插入新用户
     const [result] = await pool.query(
-      'INSERT INTO volunteers (name, id_card, age, phone) VALUES (?, ?, ?, ?)',
-      [name, id_card, age, phone]
+      'INSERT INTO volunteers SET ?', 
+      {
+        ...req.body,
+        specialties: JSON.stringify(req.body.specialties),
+        experiences: JSON.stringify(req.body.experiences)
+      }
     )
-
     res.json({
       success: true,
       userId: result.insertId
@@ -104,7 +127,7 @@ app.get('/api/volunteer/:name', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM volunteers WHERE name = ?',
+      'SELECT * FROM volunteers WHERE real_name = ?',
       [name]
     )
     if (rows.length > 0) {
