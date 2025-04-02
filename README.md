@@ -28,6 +28,7 @@ mkdir frontend backend database
 cd frontend  && npm create vue@latest 
 npm install element-plus axios 
 npm install @element-plus/icons-vue 
+npm install xlsx
 ```
 
 完整引入element-plus in main.js
@@ -39,7 +40,7 @@ import 'element-plus/dist/index.css'
 
 ### 后端构建
 ```bash
-cd ..
+cd /volunteer-system/
 npm install express mysql2 cors body-parser
 ```
 创建backend/app.js
@@ -48,6 +49,9 @@ npm install express mysql2 cors body-parser
    创建init.sql;
 
    打开HeidiSQL工具，文件 -- 运行SQL文件 -- 选择init.sql打开，会执行其中的命令，创建数据库和表，并插入admin/1234作为管理员
+
+   mysql -u root -p 输入mysql安装时设置的密码
+   source full-path-to-init.sql
 
 
 ### 跨域配置

@@ -20,6 +20,10 @@ const routes = [
         {
           path: '/service-registery',
           component: () => import('../views/dashboard/ServiceRegister.vue')
+        },
+        {
+          path: '/service-query',
+          component: () => import('../views/dashboard/ServiceQuery.vue')
         }
       ]
    }

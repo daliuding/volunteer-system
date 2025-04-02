@@ -151,7 +151,7 @@ app.get('/api/volunteer/:name', async (req, res) => {
 })
 
 /*
- * 志愿者服务管理接口, 包括：服务签到、服务记录查询
+ * 志愿者服务管理接口, 包括：服务签到、服务积分查询
  */
 // 提交服务记录
 app.post('/api/service-registery', async (req, res) => {
@@ -176,6 +176,61 @@ app.post('/api/service-registery', async (req, res) => {
   }
 })
 
+// 获取所有志愿者积分汇总
+app.get('/api/services/summary', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT 
+        v.id,
+        v.real_name AS name,
+        v.mobile,
+        COALESCE(SUM(TIMESTAMPDIFF(HOUR, s.start_time, s.end_time)), 0) AS total_points
+      FROM volunteers v
+      LEFT JOIN service_records s ON v.id = s.volunteer_id
+      GROUP BY v.id
+      ORDER BY total_points DESC
+    `)
+    res.json(rows.map(item => ({
+      ...item,
+      total_points: item.total_points || 0 // 处理null值
+    })))
+  } catch (err) {
+    res.status(500).json({ error: '获取积分汇总失败' })
+  }
+})
+
+// 获取单个志愿者详细积分
+app.get('/api/services/detail/:volunteer_id', async (req, res) => {
+  try {
+    const [detail] = await pool.query(`
+      SELECT 
+        service_date,
+        start_time,
+        end_time,
+        COALESCE(TIMESTAMPDIFF(HOUR, start_time, end_time), 0) AS points,
+        content
+      FROM service_records
+      WHERE volunteer_id = ?
+      ORDER BY service_date DESC
+    `, [req.params.volunteer_id])
+
+    const [total] = await pool.query(`
+      SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, start_time, end_time)), 0) AS total
+      FROM service_records
+      WHERE volunteer_id = ?
+    `, [req.params.volunteer_id])
+
+    res.json({
+      detail: detail.map(item => ({
+        ...item,
+        points: item.points || 0
+      })),
+      total_points: total[0].total || 0
+    })
+  } catch (err) {
+    res.status(500).json({ error: '获取详细记录失败' })
+  }
+})
 
 app.listen(3000, () => {
   console.log('后端服务运行在 http://localhost:3000')
