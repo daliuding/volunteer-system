@@ -2,24 +2,17 @@
     <div class="query-volunteer">
         <el-card class="box-card">
             <h2>志愿者查询</h2>
-            <el-form :inline="true" class="query-form">
+            <el-form :inline="true" class="query-form" @submit.native.prevent>
                 <el-form-item label="姓名">
-                    <el-select 
+                    <el-input
                         v-model="selectedName"
-                        placeholder="请选择姓名" 
-                        @change="fetchSingle" 
+                        placeholder="请输入姓名"
                         style="width: 200px"
+                        @keyup.enter="fetchSingle"
                         clearable
                         v-loading="loading"
                         :disabled="loading"
-                    >
-                        <el-option
-                            v-for="volunteer in volunteerList"
-                            :key="volunteer.id"
-                            :label="volunteer?.real_name || ''"
-                            :value="volunteer?.real_name || ''"
-                        ></el-option>
-                    </el-select>
+                    ></el-input>
                 </el-form-item>
             </el-form>
             <el-table v-if="volunteerData" :data="volunteerData" style="width: 100%">
@@ -45,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 
@@ -78,16 +71,19 @@ const fetchSingle = async () => {
         const response = await axios.get(`http://localhost:3000/api/volunteer/${selectedName.value}`);
         if (response.data.success) {
             volunteerData.value = response.data.data
-            if (!volunteerData.value) {
-                ElMessage.warning('未找到该志愿者信息')
-            }
-        } else {
-            ElMessage.error('查询失败')
         }
     } catch (error) {
-        ElMessage.error("Failed to search volunteer")
+        ElMessage.error("未找到该志愿者信息，查询失败")
     }
 };
+
+// watch 监听 selectedName, el-input 清空selectedName时触发
+watch(selectedName, (newValue) => {
+  if (!newValue) {
+    // 当输入框内容被清空时，重新加载全部数据
+    volunteerData.value = null;
+  }
+});
 
 onMounted(() => {
     fetchVolunteers()
