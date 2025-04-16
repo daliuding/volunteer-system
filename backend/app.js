@@ -184,7 +184,11 @@ app.get('/api/services/summary', async (req, res) => {
         v.id,
         v.real_name AS name,
         v.mobile,
-        COALESCE(SUM(TIMESTAMPDIFF(HOUR, s.start_time, s.end_time)), 0) AS total_points
+        COALESCE(SUM(
+            TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
+            (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END))
+            , 0)
+            AS total_points
       FROM volunteers v
       LEFT JOIN service_records s ON v.id = s.volunteer_id
       GROUP BY v.id
@@ -199,38 +203,54 @@ app.get('/api/services/summary', async (req, res) => {
   }
 })
 
-// 获取单个志愿者详细积分
-app.get('/api/services/detail/:volunteer_id', async (req, res) => {
+// 获取单个志愿者详细积分，不能重名（重名需要在录入用户时就处理，否则服务登记无法正确关联）
+// 小于半小时的服务记录不计入积分，大于等于30min的按1小时计算
+app.get('/api/services/detail/:name', async (req, res) => {
+  const { name } = req.params
   try {
-    const [detail] = await pool.query(`
-      SELECT 
-        service_date,
-        start_time,
-        end_time,
-        COALESCE(TIMESTAMPDIFF(HOUR, start_time, end_time), 0) AS points,
-        content
-      FROM service_records
-      WHERE volunteer_id = ?
-      ORDER BY service_date DESC
-    `, [req.params.volunteer_id])
+    // 先查询volunteers表，获取volunteer_id
+    const [volunteer_id] = await pool.query(`
+      SELECT id FROM volunteers WHERE real_name = ?
+    `, name)
 
-    const [total] = await pool.query(`
-      SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, start_time, end_time)), 0) AS total
-      FROM service_records
-      WHERE volunteer_id = ?
-    `, [req.params.volunteer_id])
+    if (volunteer_id.length === 0) {
+      return res.status(404).json({ error: '未找到匹配的志愿者' })
+    }
+    // 再查询service_records表
+    const [rows] = await pool.query(`
+        SELECT
+          v.real_name AS name,
+          v.mobile,
+          s.service_date,
+          s.start_time,
+          s.end_time,
+          s.content,
+          COALESCE(
+            TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
+            (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
+            AS points
+        FROM volunteers v
+        LEFT JOIN service_records s ON v.id = s.volunteer_id
+        WHERE v.id = ?
+        ORDER BY s.service_date DESC, s.start_time DESC
+      `, volunteer_id[0].id)
 
-    res.json({
-      detail: detail.map(item => ({
-        ...item,
-        points: item.points || 0
-      })),
-      total_points: total[0].total || 0
-    })
+      // 计算总积分
+      const total_points = rows.reduce((acc, cur) => acc + cur.points, 0)
+
+      res.json({
+        detail: rows.map(item => ({
+          ...item,
+          points: item.points || 0 // 处理null值
+        })),
+        total_points: total_points || 0 // 计算总积分
+       })
   } catch (err) {
     res.status(500).json({ error: '获取详细记录失败' })
   }
 })
+
+
 
 app.listen(3000, () => {
   console.log('后端服务运行在 http://localhost:3000')
