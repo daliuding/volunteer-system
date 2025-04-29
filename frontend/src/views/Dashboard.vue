@@ -23,7 +23,8 @@
           <span style="font-size: 17.5px;">志愿服务管理</span>
         </template>
           <el-menu-item index="/service-registery">服务登记</el-menu-item>
-          <el-menu-item index="/service-query">服务查询</el-menu-item>
+          <el-menu-item index="/service-query-year">服务年度查询</el-menu-item>
+          <el-menu-item index="/service-query">服务总查询</el-menu-item>
       </el-sub-menu>
       </el-menu>   
     </el-aside>

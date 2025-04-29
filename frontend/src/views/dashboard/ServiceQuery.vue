@@ -70,18 +70,12 @@
               {{ row.total_points }}
             </template>
           </el-table-column>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-button type="primary" @click="exportExcel" size="large" >导出Excel</el-button>
-          </el-col>
-        </el-row>
         </el-table>
+
       </template>
-
-
-      </el-card>
-    </div>
-  </template>
+    </el-card>
+  </div>
+</template>
 
   <script setup>
   import { ref, onMounted, watch } from 'vue';

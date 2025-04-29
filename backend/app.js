@@ -250,7 +250,65 @@ app.get('/api/services/detail/:name', async (req, res) => {
   }
 })
 
+// 年度查询：所有志愿者的 year 年度服务汇总
+app.get('/api/services/summary/:year', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT
+        v.id,
+        v.real_name AS name,
+        v.mobile,
+        COALESCE(SUM(
+            TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
+            (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END))
+            , 0)
+        AS total_points
+      FROM volunteers v
+      LEFT JOIN service_records s ON v.id = s.volunteer_id
+      WHERE YEAR(s.service_date) = ?
+      GROUP BY v.id
+      ORDER BY total_points DESC
+    `, req.params.year)
 
+    res.json(rows.map(item => ({
+      ...item,
+      total_points: item.total_points || 0 // 处理null值
+    })))
+  } catch (err) {
+    res.status(500).json({ error: '获取积分汇总失败' })
+  }
+})
+
+// 年度查询：单个志愿者的 year 年度服务详情
+// 小于半小时的服务记录不计入积分，大于等于30min的按1小时计算
+app.get('/api/services/year-detail/:year', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+        SELECT
+          v.real_name AS name,
+          v.mobile,
+          s.service_date,
+          s.start_time,
+          s.end_time,
+          s.content,
+          COALESCE(
+            TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
+            (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
+            AS points
+        FROM volunteers v
+        LEFT JOIN service_records s ON v.id = s.volunteer_id
+        WHERE YEAR(s.service_date) = ?
+        ORDER BY v.id, s.service_date DESC
+    `, req.params.year)
+
+    res.json(rows.map(item => ({
+      ...item,
+      points: item.points || 0 // 处理null值
+    })))
+  } catch (err) {
+    res.status(500).json({ error: '获取详细记录失败' })
+  }
+})
 
 app.listen(3000, () => {
   console.log('后端服务运行在 http://localhost:3000')
