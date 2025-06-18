@@ -23,7 +23,7 @@ const routes = [
         },
         {
           path: '/service-query',
-          component: () => import('../views/dashboard/ServiceQuery.vue')
+          component: () => import('../views/dashboard/ServiceRank.vue')
         },
         {
           path: '/service-query-year',

@@ -1,7 +1,7 @@
 <template>
   <div class="service-query">
     <el-card>
-      <h2>志愿服务总计</h2>
+      <h2>志愿服务历史总排名(所有年度总计)</h2>
       <el-form :inline="true" @submit.native.prevent>
         <el-form-item label="输入志愿者姓名">
           <el-input
