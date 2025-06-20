@@ -2,11 +2,11 @@
   <el-card>
     <h2>年度志愿服务</h2>
       <el-form :inline="true"  label-width="auto"  @submit.native.prevent size="large" >
-          <el-form-item label="输入年份" style="width: 250px;" >
+          <el-form-item label="输入年份" style="width: 250px;">
             <el-select 
-            v-model="selectedYear" 
-            placeholder="请选择年份" 
-            clearable
+              v-model="selectedYear" 
+              placeholder="请选择年份" 
+              clearable
             >
               <el-option label="2025" value="2025" />
               <el-option label="2024" value="2024" />
@@ -14,13 +14,22 @@
               <el-option label="2022" value="2022" />
             </el-select>
           </el-form-item>
+          <el-form-item label="志愿者姓名" style="width: 250px;">
+            <el-input
+              v-model="selectedVolunteer"
+              placeholder="请输入姓名"
+              clearable
+            ></el-input>
+          </el-form-item>
+
           <el-form-item>
-            <el-button type="primary" :icon="Search" @click="handleYearDetail"  >服务详情</el-button>
+            <el-button type="primary" :icon="Search" @click="handleYearandVolunteerDetail"  >服务详情</el-button>
             <el-button type="primary" :icon="Search" @click="handleYearSummary"> 服务汇总</el-button>
           </el-form-item>
       </el-form>
 
-      <!-- 列出 selectedYear 年度的所有服务记录 -->
+      <!-- 列出 selectedYear + selectedVolunteer年度的所有服务记录 -->
+       <!-- 没有选择的，默认全部-->
       <template v-if="detailData.length > 0">
         <el-row :gutter="20" >
           <el-col>
@@ -84,6 +93,7 @@
     const summaryData = ref([]) // 年度总计
     const detailData = ref([])  // 年度详情
     const selectedYear = ref("")
+    const selectedVolunteer = ref("")
     const loading = ref(false)
     const exportLoading = ref(false)
   
@@ -110,22 +120,29 @@
     }
   
     // 加载年度 详细的服务记录
-    const handleYearDetail = async() => {
-      if (!selectedYear.value) {
-        ElMessage.warning('请选择一个年份')
+    const handleYearandVolunteerDetail = async() => {
+      if (!selectedYear.value && !selectedVolunteer.value) {
+        ElMessage.warning('请选择年份或输入志愿者姓名')
         return;
       }
+      // 构建查询参数
+      const params = {};
+      if (selectedYear.value) params.year = selectedYear.value;
+      if (selectedVolunteer.value) params.volunteer_name = selectedVolunteer.value;
+
       // 清空数据，重新加载
       summaryData.value = []
       detailData.value = []
       try {
         loading.value = true
-        console.log('selectedYear', selectedYear.value)
-        const response = await axios.get(`http://localhost:3000/api/services/year-detail/${selectedYear.value}`)
+        console.log('查询参数:', params)
+        const response = await axios.get('http://localhost:3000/api/services/year-volunteer-detail', { params })
         detailData.value = response.data
-        console.log('detailData', detailData.value)
+        if (response.data.length === 0) {
+          ElMessage.warning('没有找到相关服务记录')
+        }
       } catch (err) {
-        ElMessage.error('加载服务记录失败')
+        ElMessage.error('加载服务记录失败, 请稍后重试')
       } finally {
         loading.value = false
       }

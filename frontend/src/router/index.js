@@ -27,7 +27,7 @@ const routes = [
         },
         {
           path: '/service-query-year',
-          component: () => import('../views/dashboard/ServiceQueryYear.vue')
+          component: () => import('../views/dashboard/ServiceQueryYearName.vue')
         }
       ]
    }
