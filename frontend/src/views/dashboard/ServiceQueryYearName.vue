@@ -205,12 +205,23 @@
           // 创建工作簿
           const worksheet = utils.json_to_sheet(exportData)
           const workbook = utils.book_new()
-          utils.book_append_sheet(workbook, worksheet, "年度积分详情")
+          utils.book_append_sheet(workbook, worksheet, "志愿者年度积分详情")
   
           // 生成文件并下载
-          writeFile(workbook, `${selectedYear.value}年度服务详情_${new Date().toLocaleDateString()}.xlsx`, {
-          compression: true
-          })
+          if (selectedYear.value === "") {
+            writeFile(workbook, `志愿者${selectedVolunteer.value}服务详情_${new Date().toLocaleDateString()}.xlsx`, {
+              compression: true
+            })
+          } else if (selectedVolunteer.value === "") {
+            writeFile(workbook, `${selectedYear.value}年度所有志愿者服务详情_${new Date().toLocaleDateString()}.xlsx`, {
+              compression: true
+            })
+          } else {
+            writeFile(workbook, `${selectedYear.value}年度志愿者${selectedVolunteer.value}服务详情_${new Date().toLocaleDateString()}.xlsx`, {
+              compression: true
+            })
+          }
+
   
           ElMessage.success('导出成功')
       } catch (err) {
