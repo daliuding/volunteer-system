@@ -1,6 +1,6 @@
 <template>
   <el-card>
-    <h2>年度志愿服务</h2>
+    <h2>服务详情查询</h2>
       <el-form :inline="true"  label-width="auto"  @submit.native.prevent size="large" >
           <el-form-item label="输入年份" style="width: 250px;">
             <el-select 
@@ -24,7 +24,6 @@
 
           <el-form-item>
             <el-button type="primary" :icon="Search" @click="handleYearandVolunteerDetail"  >服务详情</el-button>
-            <el-button type="primary" :icon="Search" @click="handleYearSummary"> 服务汇总</el-button>
           </el-form-item>
       </el-form>
 
@@ -60,25 +59,6 @@
         </el-table>
       </template>
   
-        <!-- 汇总每个人 selectedYear 年度的服务总积分 -->
-        <template v-else-if="summaryData.length > 0">
-          <el-row :gutter="20" >
-            <el-col>
-              <el-button color="#626aef"  @click="summaryExportExcel" size="large" >导出Excel</el-button>
-            </el-col>
-          </el-row>
-  
-          <el-table :data="summaryData" border stripe style="width: 100%; margin-top: 20px;">
-            <el-table-column prop="name" label="姓名" width="100" />
-            <el-table-column prop="mobile" label="电话" width="150" />
-            <el-table-column :label="selectedYear + '年度总积分'">
-              <template #default="{row}">
-                {{ row.total_points }}
-              </template>
-            </el-table-column>
-          </el-table>
-
-        </template>
     </el-card>
   </template>
   
@@ -86,38 +66,15 @@
     import { ref, watch } from 'vue';
     import axios from 'axios'
     import { ElMessage } from 'element-plus'
-    import { utils, writeFile } from 'xlsx'
+    import { utils, write, writeFile } from 'xlsx'
     import {Search} from '@element-plus/icons-vue'
   
     // 数据状态
-    const summaryData = ref([]) // 年度总计
     const detailData = ref([])  // 年度详情
     const selectedYear = ref("")
     const selectedVolunteer = ref("")
     const loading = ref(false)
     const exportLoading = ref(false)
-  
-    // 加载初始数据
-    const handleYearSummary = async () => {
-      if (!selectedYear.value) {
-        ElMessage.warning('请选择一个年份')
-        return
-      }
-      // 清空数据，重新加载
-      detailData.value = []
-      summaryData.value = []
-      try {
-        loading.value = true
-        const response = await axios.get(`http://localhost:3000/api/services/summary/${selectedYear.value}`)
-        summaryData.value = response.data
-        console.log('summaryData', summaryData.value)
-      } catch (err) {
-        console.error('Error fetching summary data:', err)
-        ElMessage.error('加载积分汇总失败，请稍后重试')
-      } finally {
-        loading.value = false
-      }
-    }
   
     // 加载年度 详细的服务记录
     const handleYearandVolunteerDetail = async() => {
@@ -131,11 +88,9 @@
       if (selectedVolunteer.value) params.volunteer_name = selectedVolunteer.value;
 
       // 清空数据，重新加载
-      summaryData.value = []
       detailData.value = []
       try {
         loading.value = true
-        console.log('查询参数:', params)
         const response = await axios.get('http://localhost:3000/api/services/year-volunteer-detail', { params })
         detailData.value = response.data
         if (response.data.length === 0) {
@@ -152,7 +107,6 @@
       if (!newValue) {
         // 当输入框内容被清空时，重新加载全部数据
         detailData.value = [];
-        summaryData.value = [];
       }
      })
 
@@ -164,32 +118,6 @@
       return new Date(dateStr).toLocaleDateString()
     }
   
-    const summaryExportExcel = () => {
-      exportLoading.value = true
-      try {
-          // 准备数据
-          const exportData = summaryData.value.map(item => ({
-          '姓名': item.name,
-          '电话': item.mobile,
-          '年度总积分': item.total_points
-          }))
-          // 创建工作簿
-          const worksheet = utils.json_to_sheet(exportData)
-          const workbook = utils.book_new()
-          utils.book_append_sheet(workbook, worksheet, "年度积分汇总")
-  
-          // 生成文件并下载
-          writeFile(workbook, `${selectedYear.value}年度服务汇总_${new Date().toLocaleDateString()}.xlsx`, {
-          compression: true
-          })
-  
-          ElMessage.success('导出成功')
-      } catch (err) {
-          ElMessage.error('导出失败: ' + err.message)
-      } finally {
-          exportLoading.value = false
-      }
-    }
     const detailExportExcel = () => {
       exportLoading.value = true
       try {

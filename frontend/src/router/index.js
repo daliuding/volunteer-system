@@ -28,6 +28,10 @@ const routes = [
         {
           path: '/service-query-year',
           component: () => import('../views/dashboard/ServiceQueryYearName.vue')
+        },
+        {
+          path: '/service-query-acc',
+          component: () => import('../views/dashboard/ServiceQueryACC.vue')
         }
       ]
    }
