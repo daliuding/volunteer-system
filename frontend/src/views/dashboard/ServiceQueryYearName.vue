@@ -23,7 +23,7 @@
           </el-form-item>
 
           <el-form-item>
-            <el-button type="primary" :icon="Search" @click="handleYearandVolunteerDetail"  >服务详情</el-button>
+            <el-button type="primary" :icon="Search" @click="handleYearandVolunteerDetail">详情查询</el-button>
           </el-form-item>
       </el-form>
 

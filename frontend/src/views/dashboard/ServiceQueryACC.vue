@@ -1,6 +1,6 @@
 <template>
   <el-card>
-    <h2>年度积分汇总</h2>
+    <h2>年度积分排名查询</h2>
       <el-form :inline="true"  label-width="auto"  @submit.native.prevent size="large" >
           <el-form-item label="输入年份" style="width: 250px;">
             <el-select 
@@ -15,7 +15,7 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :icon="Search" @click="handleYearSummary"> 服务汇总</el-button>
+            <el-button type="primary" :icon="Search" @click="handleYearSummary">汇总查询</el-button>
           </el-form-item>
       </el-form>
 
