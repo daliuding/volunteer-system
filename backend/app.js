@@ -72,23 +72,31 @@ app.post('/api/register', async (req, res) => {
     if (req.body.birth_date === '') {
       req.body.birth_date = null;
     }
-    // 验证JSON字段
+
+    // 验证并规范化 JSON 字段（接受前端传入的字符串或对象）
+    let specialtiesParsed = null
+    let experiencesParsed = null
     try {
-      JSON.parse(req.body.specialties)
-      JSON.parse(req.body.experiences)
+      specialtiesParsed = typeof req.body.specialties === 'string'
+        ? JSON.parse(req.body.specialties)
+        : req.body.specialties
+      experiencesParsed = typeof req.body.experiences === 'string'
+        ? JSON.parse(req.body.experiences)
+        : req.body.experiences
     } catch (e) {
       return res.status(400).json({
         success: false,
         error: 'JSON数据格式错误'
       })
     }
-    // 插入新用户
+
+    // 插入新用户（确保 JSON 字段以标准 JSON 字符串存储）
     const [result] = await pool.query(
       'INSERT INTO volunteers SET ?', 
       {
         ...req.body,
-        specialties: JSON.stringify(req.body.specialties),
-        experiences: JSON.stringify(req.body.experiences)
+        specialties: specialtiesParsed ? JSON.stringify(specialtiesParsed) : null,
+        experiences: experiencesParsed ? JSON.stringify(experiencesParsed) : null
       }
     )
     res.json({
@@ -120,6 +128,36 @@ app.get('/api/volunteers', async (req, res) => {
     })
   }
 })
+
+// 按部门和/或姓名查询志愿者
+app.get('/api/volunteers/query', async (req, res) => {
+  try {
+    const { department, name } = req.query;
+    let sql = 'SELECT * FROM volunteers WHERE 1=1';
+    const params = [];
+
+    if (department) {
+      sql += ' AND department = ?';
+      params.push(department);
+    }
+    if (name) {
+      sql += ' AND real_name LIKE ?';
+      params.push(`%${name}%`);
+    }
+
+    const [rows] = await pool.query(sql, params);
+    res.json({
+      success: true,
+      data: rows
+    });
+  } catch (err) {
+    console.error('查询志愿者信息失败:', err);
+    res.status(500).json({
+      success: false,
+      message: '服务器内部错误'
+    });
+  }
+});
 
 // 查询指定志愿者姓名的接口
 app.get('/api/volunteer/:name', async (req, res) => {

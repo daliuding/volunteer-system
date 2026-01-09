@@ -3,7 +3,7 @@
     <!-- 基本信息 -->
     <el-row :gutter="20">
         <el-col :span="5">
-          <el-form-item label="姓名" prop="real_name" required>
+          <el-form-item label="姓名" prop="real_name">
             <el-input v-model="form.real_name" maxlength="6" />
           </el-form-item>
         </el-col>
@@ -28,11 +28,24 @@
     </el-row>
 
     <!-- 证件信息 -->
-    <el-col :span="10">
+    <el-row :gutter="20"> 
+      <el-col :span="5">
+            <el-form-item label="所属部门" prop="department">
+                <el-select v-model="form.department">
+                    <el-option label="数图中心" value="数图中心"></el-option>
+                    <el-option label="读者服务中心" value="读者服务中心"></el-option>
+                    <el-option label="少儿部" value="少儿部"></el-option>
+                    <el-option label="白云书院" value="白云书院"></el-option>
+                    <el-option label="总服务台" value="总服务台"></el-option>
+                </el-select>
+            </el-form-item>
+      </el-col>
+      <el-col :span="10">
         <el-form-item label="身份证号" prop="id_card">
             <el-input v-model="form.id_card" maxlength="18" />
         </el-form-item>
-    </el-col>
+      </el-col>
+    </el-row>
 
     <!-- 地址信息 -->
     <el-row :gutter="10">
@@ -88,7 +101,7 @@
       <!-- 联系方式-->
       <el-row :gutter="10">
         <el-col :span="5">
-            <el-form-item label="手机号码" prop="mobile" required>
+          <el-form-item label="手机号码" prop="mobile">
                 <el-input v-model="form.mobile" maxlength="11" />
             </el-form-item>
         </el-col>
@@ -179,11 +192,13 @@
   import { useRouter } from 'vue-router'
 
   const router = useRouter()
+  const formRef = ref(null)
 
   const form = reactive({
     real_name: '',
     gender: '',
     id_card: '',
+    department: '',
     ethnicity: '',
     birth_date: '',
     native_place: '',
@@ -219,6 +234,9 @@
       { required: true, message: '请输入姓名', trigger: 'blur' },
       { min: 2, max: 6, message: '姓名长度在2到6个字符', trigger: 'blur' }
     ],
+    department: [
+      { required: true, message: '请选择所属部门', trigger: 'change' }
+    ],
     mobile: [
       { required: true, message: '请输入手机号码', trigger: 'blur' },
       { min: 11, max: 11, message: '手机号码长度为11个字符', trigger: 'blur' }
@@ -241,23 +259,31 @@
 
   // 个人特长和胜任原因的数据经过 JSON 格式化后，提交到后端
   const submit = async () => {
-    try {
-      const response = await axios.post('http://localhost:3000/api/register', {
-        ...form,
-        experiences: JSON.stringify(form.experiences),
-        specialties: JSON.stringify(form.specialties)
-      })
-      if (response.data.success) {
-        ElMessage.success('注册成功')
-        router.push('/dashboard') // 跳转回后台首页
-      } else {
-        ElMessage.error('用户注册失败')
+    // 使用回调方式校验：校验失败时滚动到第一个错误字段并停止提交
+    formRef.value.validate(async (valid, fields) => {
+      if (!valid) {
+        const firstField = Object.keys(fields)[0]
+        formRef.value && formRef.value.scrollToField && formRef.value.scrollToField(firstField)
+        return
       }
-    } catch (err) {
-      ElMessage.error('服务器内部错误: ' + (err.response?.data?.error || '未知错误'))
-    } finally {
-      // 重置表单
-      form.real_name = ''
-    }
+
+      try {
+        const response = await axios.post('http://localhost:3000/api/register', {
+          ...form,
+          experiences: JSON.stringify(form.experiences),
+          specialties: JSON.stringify(form.specialties)
+        })
+        if (response.data.success) {
+          ElMessage.success('注册成功')
+          // 提交成功后重置表单
+          formRef.value && formRef.value.resetFields()
+          router.push('/dashboard') // 跳转回后台首页
+        } else {
+          ElMessage.error('用户注册失败')
+        }
+      } catch (err) {
+        ElMessage.error('服务器内部错误: ' + (err.response?.data?.error || '未知错误'))
+      }
+    })
   }
   </script>

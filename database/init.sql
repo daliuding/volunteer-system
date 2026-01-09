@@ -14,11 +14,12 @@ INSERT IGNORE INTO admin (username, password) VALUES ('admin', '1234');
 
 
 -- 志愿者主表
-CREATE TABLE volunteers (
+CREATE TABLE IF NOT EXISTS volunteers (
   id INT PRIMARY KEY AUTO_INCREMENT,
   real_name VARCHAR(10) NOT NULL COMMENT '姓名',
   gender ENUM('男','女') NULL COMMENT '性别',
   id_card VARCHAR(18) UNIQUE NULL COMMENT '身份证号',
+  department VARCHAR(50) NOT NULL COMMENT '所属部门',
   birth_date DATE NULL COMMENT '出生日期',
   ethnicity VARCHAR(10) NULL COMMENT '民族',
   native_place VARCHAR(10) NULL COMMENT '籍贯',
