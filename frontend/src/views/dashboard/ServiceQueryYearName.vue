@@ -8,6 +8,7 @@
               placeholder="请选择年份" 
               clearable
             >
+              <el-option label="2026" value="2026" />
               <el-option label="2025" value="2025" />
               <el-option label="2024" value="2024" />
               <el-option label="2023" value="2023" />
