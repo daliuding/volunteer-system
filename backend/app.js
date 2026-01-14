@@ -51,19 +51,31 @@ app.post('/api/register', async (req, res) => {
       if (req.body.id_card && !/^\d{17}[\dX]$/i.test(req.body.id_card)) {
         return res.status(400).json({ error: '身份证格式错误' })
       }
-      // 检查身份证是否已注册
+      // 检查同一部门内身份证是否已注册（允许同一身份证在不同部门注册）
       const [idCardCheck] = await pool.query(
-        'SELECT id FROM volunteers WHERE id_card = ?',
-        [req.body.id_card]
+        'SELECT id FROM volunteers WHERE id_card = ? AND department = ?',
+        [req.body.id_card, req.body.department]
       )
       if (idCardCheck.length > 0) {
         return res.status(400).json({
           success: false,
-          message: '该身份证已注册'
+          message: '该身份证在该部门已注册'
         })
       }
     } else {
       req.body.id_card = null;
+    }
+    
+    // 检查同一部门内手机号是否已注册（允许同一手机号在不同部门注册）
+    const [mobileCheck] = await pool.query(
+      'SELECT id FROM volunteers WHERE mobile = ? AND department = ?',
+      [req.body.mobile, req.body.department]
+    )
+    if (mobileCheck.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: '该手机号在该部门已注册'
+      })
     }
     if (req.body.gender === '') {
       req.body.gender = null;

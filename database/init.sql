@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS volunteers (
   id INT PRIMARY KEY AUTO_INCREMENT,
   real_name VARCHAR(10) NOT NULL COMMENT '姓名',
   gender ENUM('男','女') NULL COMMENT '性别',
-  id_card VARCHAR(18) UNIQUE NULL COMMENT '身份证号',
+  id_card VARCHAR(18) NULL COMMENT '身份证号',
   department VARCHAR(50) NOT NULL COMMENT '所属部门',
   birth_date DATE NULL COMMENT '出生日期',
   ethnicity VARCHAR(10) NULL COMMENT '民族',
@@ -28,14 +28,18 @@ CREATE TABLE IF NOT EXISTS volunteers (
   education VARCHAR(20) NULL COMMENT '学历',
   political_status VARCHAR(20) NULL COMMENT '政治面貌',
   health_status VARCHAR(10) NULL COMMENT '健康状况',
-  mobile VARCHAR(20) UNIQUE NOT NULL COMMENT '手机号',
+  mobile VARCHAR(20) NOT NULL COMMENT '手机号',
   wechat VARCHAR(20) NULL COMMENT '微信号',
   qq VARCHAR(20) NULL COMMENT 'QQ号',
   specialties JSON NULL COMMENT '个人特长',
   experiences JSON NULL COMMENT '服务经历',
   qualification TEXT NULL COMMENT '胜任原因',
   guarantee BOOLEAN NULL COMMENT '服从分配',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- 组合唯一约束：同一部门内身份证号唯一（如果提供身份证）
+  UNIQUE KEY uk_department_idcard (department, id_card),
+  -- 组合唯一约束：同一部门内手机号唯一
+  UNIQUE KEY uk_department_mobile (department, mobile)
 );
 
 -- 服务记录表
