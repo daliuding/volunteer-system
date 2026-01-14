@@ -41,6 +41,15 @@
             </el-form-item>
       </el-col>
       <el-col :span="10">
+        <el-alert
+          title="提示：同一志愿者可以在多个部门注册。部门内部可重名。"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-top: 0px;"
+        />
+      </el-col>
+      <el-col :span="10">
         <el-form-item label="身份证号" prop="id_card">
             <el-input v-model="form.id_card" maxlength="18" />
         </el-form-item>
