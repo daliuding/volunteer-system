@@ -329,87 +329,67 @@ app.get('/api/services/summary/:year', async (req, res) => {
   }
 })
 
-// 年度查询：年份和志愿者姓名的服务详细记录
-// 若志愿者姓名为空，则返回所有志愿者的年度服务记录;
-// 若年份为空，则返回该志愿者所有年度服务记录;
-// 若志愿者姓名和年份都不为空，则返回该志愿者指定年份的服务记录;
-// 前端会保证不会传入空字符串或null值
+// 年度查询：年份、部门和志愿者姓名的服务详细记录
+// 支持年份、部门、姓名三个参数的任意组合查询
+// 未选择的项默认为全部
 app.get('/api/services/year-volunteer-detail', async (req, res) => {
   try {
-    // 如果年份为空，则返回指定志愿者的所有服务记录
-    if (!req.query.year) {
-      const [rows] = await pool.query(`
-        SELECT
-          v.real_name AS name,
-          v.mobile,
-          s.service_date,
-          s.start_time,
-          s.end_time,
-          s.content,
-          COALESCE(
-            TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
-            (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
-            AS points
-        FROM service_records s
-        LEFT JOIN volunteers v ON v.id = s.volunteer_id
-        WHERE v.real_name = ?
-        ORDER BY s.service_date DESC, s.start_time DESC
-      `, req.query.volunteer_name)
-      res.json(rows.map(item => ({
-        ...item,
-        points: item.points || 0 // 处理null值
-      })))
-    } else {
-      // 如果志愿者姓名为空，则返回指定年份所有志愿者服务记录
-      if (!req.query.volunteer_name) {
-        const [rows] = await pool.query(`
-          SELECT
-            v.real_name AS name,
-            v.mobile,
-            s.service_date,
-            s.start_time,
-            s.end_time,
-            s.content,
-            COALESCE(
-              TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
-              (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
-              AS points
-          FROM volunteers v
-          LEFT JOIN service_records s ON v.id = s.volunteer_id
-          WHERE YEAR(s.service_date) = ?
-          ORDER BY v.id, s.service_date DESC
-        `, req.query.year)
-        res.json(rows.map(item => ({
-          ...item,
-          points: item.points || 0 // 处理null值
-        })))
-      } else {
-        // 如果志愿者姓名和年份都不为空，则返回该志愿者指定年份的服务记录
-        const [rows] = await pool.query(`
-          SELECT
-            v.real_name AS name,
-            v.mobile,
-            s.service_date,
-            s.start_time,
-            s.end_time,
-            s.content,
-            COALESCE(
-              TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
-              (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
-              AS points
-          FROM volunteers v
-          LEFT JOIN service_records s ON v.id = s.volunteer_id          
-          WHERE v.real_name = ? AND YEAR(s.service_date) = ?
-          ORDER BY s.service_date DESC, s.start_time DESC
-        `, [req.query.volunteer_name, req.query.year])
+    // 动态构建WHERE子句和参数
+    const conditions = []
+    const params = []
 
-        res.json(rows.map(item => ({
-          ...item,
-          points: item.points || 0 // 处理null值
-        })))
-      }
+    // 年份条件
+    if (req.query.year) {
+      conditions.push('YEAR(s.service_date) = ?')
+      params.push(req.query.year)
     }
+
+    // 部门条件
+    if (req.query.department) {
+      conditions.push('v.department = ?')
+      params.push(req.query.department)
+    }
+
+    // 志愿者姓名条件
+    if (req.query.volunteer_name) {
+      conditions.push('v.real_name = ?')
+      params.push(req.query.volunteer_name)
+    }
+
+    // 确保只查询有服务记录的（服务详情查询应该只显示有服务记录的）
+    conditions.push('s.service_date IS NOT NULL')
+
+    // 构建WHERE子句
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    // 构建查询SQL
+    const query = `
+      SELECT
+        v.real_name AS name,
+        v.department,
+        v.mobile,
+        s.service_date,
+        s.start_time,
+        s.end_time,
+        s.content,
+        COALESCE(
+          TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
+          (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END), 0)
+          AS points
+      FROM volunteers v
+      INNER JOIN service_records s ON v.id = s.volunteer_id
+      ${whereClause}
+      ORDER BY s.service_date DESC, s.start_time DESC
+    `
+
+    const [rows] = await pool.query(query, params)
+    
+    res.json(rows.map(item => ({
+      ...item,
+      points: item.points || 0 // 处理null值
+    })))
   } catch (err) {
+    console.error('获取详细记录失败:', err)
     res.status(500).json({ error: '获取详细记录失败' })
   }
 })

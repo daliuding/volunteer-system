@@ -15,6 +15,19 @@
               <el-option label="2022" value="2022" />
             </el-select>
           </el-form-item>
+          <el-form-item label="所属部门" style="width: 250px;">
+            <el-select 
+              v-model="selectedDepartment" 
+              placeholder="请选择部门" 
+              clearable
+            >
+              <el-option label="数图中心" value="数图中心" />
+              <el-option label="读者服务中心" value="读者服务中心" />
+              <el-option label="少儿部" value="少儿部" />
+              <el-option label="白云书院" value="白云书院" />
+              <el-option label="总服务台" value="总服务台" />
+            </el-select>
+          </el-form-item>
           <el-form-item label="志愿者姓名" style="width: 250px;">
             <el-input
               v-model="selectedVolunteer"
@@ -39,6 +52,7 @@
             
         <el-table :data="detailData" border stripe style="width: 100%; margin-top: 20px;">
           <el-table-column prop="name" label="姓名" width="100" />
+          <el-table-column prop="department" label="所属部门" width="120" />
           <el-table-column prop="mobile" label="电话" width="150" />
           <el-table-column prop="service_date" label="服务日期" width="120">
             <template #default="{row}">
@@ -64,7 +78,7 @@
   </template>
   
     <script setup>
-    import { ref, watch } from 'vue';
+    import { ref } from 'vue';
     import axios from 'axios'
     import { ElMessage } from 'element-plus'
     import { utils, write, writeFile } from 'xlsx'
@@ -73,19 +87,18 @@
     // 数据状态
     const detailData = ref([])  // 年度详情
     const selectedYear = ref("")
+    const selectedDepartment = ref("")
     const selectedVolunteer = ref("")
     const loading = ref(false)
     const exportLoading = ref(false)
   
     // 加载年度 详细的服务记录
     const handleYearandVolunteerDetail = async() => {
-      if (!selectedYear.value && !selectedVolunteer.value) {
-        ElMessage.warning('请选择年份或输入志愿者姓名')
-        return;
-      }
+      // 允许任意组合查询，未选择的项默认为全部，所以不需要验证至少选择一个
       // 构建查询参数
       const params = {};
       if (selectedYear.value) params.year = selectedYear.value;
+      if (selectedDepartment.value) params.department = selectedDepartment.value;
       if (selectedVolunteer.value) params.volunteer_name = selectedVolunteer.value;
 
       // 清空数据，重新加载
@@ -104,12 +117,6 @@
       }
     }
   
-    watch(selectedYear, (newValue) => {
-      if (!newValue) {
-        // 当输入框内容被清空时，重新加载全部数据
-        detailData.value = [];
-      }
-     })
 
   
     // 日期格式化
@@ -125,6 +132,7 @@
           // 准备数据
           const exportData = detailData.value.map(item => ({
           '姓名': item.name,
+          '所属部门': item.department,
           '电话': item.mobile,
           '服务日期': formatDate(item.service_date),
           '服务时间': item.start_time + ' - ' + item.end_time,
@@ -137,19 +145,17 @@
           utils.book_append_sheet(workbook, worksheet, "志愿者年度积分详情")
   
           // 生成文件并下载
-          if (selectedYear.value === "") {
-            writeFile(workbook, `志愿者${selectedVolunteer.value}服务详情_${new Date().toLocaleDateString()}.xlsx`, {
-              compression: true
-            })
-          } else if (selectedVolunteer.value === "") {
-            writeFile(workbook, `${selectedYear.value}年度所有志愿者服务详情_${new Date().toLocaleDateString()}.xlsx`, {
-              compression: true
-            })
-          } else {
-            writeFile(workbook, `${selectedYear.value}年度志愿者${selectedVolunteer.value}服务详情_${new Date().toLocaleDateString()}.xlsx`, {
-              compression: true
-            })
+          let fileName = '服务详情';
+          const parts = [];
+          if (selectedYear.value) parts.push(`${selectedYear.value}年度`);
+          if (selectedDepartment.value) parts.push(`${selectedDepartment.value}`);
+          if (selectedVolunteer.value) parts.push(`志愿者${selectedVolunteer.value}`);
+          if (parts.length > 0) {
+            fileName = parts.join('_') + '_服务详情';
           }
+          writeFile(workbook, `${fileName}_${new Date().toLocaleDateString()}.xlsx`, {
+            compression: true
+          })
 
   
           ElMessage.success('导出成功')
