@@ -2,10 +2,10 @@
   <el-card>
     <h2>服务详情查询</h2>
       <el-form :inline="true"  label-width="auto"  @submit.native.prevent size="large" >
-          <el-form-item label="输入年份" style="width: 250px;">
+          <el-form-item label="输入年份" style="width: 300px;">
             <el-select 
               v-model="selectedYear" 
-              placeholder="请选择年份" 
+              placeholder="请选择年份(可选)" 
               clearable
             >
               <el-option label="2026" value="2026" />
@@ -15,10 +15,10 @@
               <el-option label="2022" value="2022" />
             </el-select>
           </el-form-item>
-          <el-form-item label="所属部门" style="width: 250px;">
+          <el-form-item label="所属部门" style="width: 300px;">
             <el-select 
               v-model="selectedDepartment" 
-              placeholder="请选择部门" 
+              placeholder="请选择部门(可选)" 
               clearable
             >
               <el-option label="数图中心" value="数图中心" />
@@ -28,10 +28,10 @@
               <el-option label="总服务台" value="总服务台" />
             </el-select>
           </el-form-item>
-          <el-form-item label="志愿者姓名" style="width: 250px;">
+          <el-form-item label="志愿者姓名" style="width: 300px;">
             <el-input
               v-model="selectedVolunteer"
-              placeholder="请输入姓名"
+              placeholder="请输入姓名(可选)"
               clearable
             ></el-input>
           </el-form-item>
