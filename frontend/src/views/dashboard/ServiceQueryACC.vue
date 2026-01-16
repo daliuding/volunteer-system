@@ -15,6 +15,20 @@
               <el-option label="2022" value="2022" />
             </el-select>
           </el-form-item>
+          <el-form-item label="选择部门" style="width: 300px;">
+            <el-select 
+              v-model="selectedDepartment" 
+              placeholder="请选择部门（可选）" 
+              clearable
+            >
+              <el-option 
+                v-for="dept in departmentOptions" 
+                :key="dept" 
+                :label="dept" 
+                :value="dept" 
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" :icon="Search" @click="handleYearSummary">汇总查询</el-button>
           </el-form-item>
@@ -30,6 +44,7 @@
   
           <el-table :data="summaryData" border stripe style="width: 100%; margin-top: 20px;">
             <el-table-column prop="name" label="姓名" width="100" />
+            <el-table-column prop="department" label="部门" width="150" />
             <el-table-column prop="mobile" label="电话" width="150" />
             <el-table-column :label="selectedYear + '年度总积分'">
               <template #default="{row}">
@@ -43,7 +58,7 @@
 </template>
   
  <script setup>
-    import { ref, watch } from 'vue';
+    import { ref, watch, onMounted } from 'vue';
     import axios from 'axios'
     import { ElMessage } from 'element-plus'
     import { utils, writeFile } from 'xlsx'
@@ -52,8 +67,21 @@
     // 数据状态
     const summaryData = ref([]) // 年度总计
     const selectedYear = ref("")
+    const selectedDepartment = ref("")
+    const departmentOptions = ref([])
     const loading = ref(false)
     const exportLoading = ref(false)
+  
+    // 加载部门列表
+    const loadDepartments = async () => {
+      try {
+        const response = await axios.get('http://localhost:3000/api/departments')
+        departmentOptions.value = response.data
+      } catch (err) {
+        console.error('Error fetching departments:', err)
+        ElMessage.error('加载部门列表失败')
+      }
+    }
   
     // 加载初始数据
     const handleYearSummary = async () => {
@@ -65,7 +93,12 @@
       summaryData.value = []
       try {
         loading.value = true
-        const response = await axios.get(`http://localhost:3000/api/services/summary/${selectedYear.value}`)
+        let url = `http://localhost:3000/api/services/summary/${selectedYear.value}`
+        // 如果选择了部门，添加到查询参数中
+        if (selectedDepartment.value) {
+          url += `?department=${encodeURIComponent(selectedDepartment.value)}`
+        }
+        const response = await axios.get(url)
         summaryData.value = response.data
       } catch (err) {
         console.error('Error fetching summary data:', err)
@@ -81,6 +114,10 @@
         summaryData.value = [];
       }
      })
+  
+    onMounted(() => {
+      loadDepartments()
+    })
 
   
     // 日期格式化
@@ -96,6 +133,7 @@
           // 准备数据
           const exportData = summaryData.value.map(item => ({
           '姓名': item.name,
+          '部门': item.department || '',
           '电话': item.mobile,
           '年度总积分': item.total_points
           }))

@@ -301,24 +301,38 @@ app.get('/api/services/detail/:name', async (req, res) => {
 })
 
 // 年度查询：所有志愿者的 year 年度服务汇总
+// 支持可选的部门筛选（通过 query 参数 department）
 app.get('/api/services/summary/:year', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const { department } = req.query
+    let query = `
       SELECT
         v.id,
         v.real_name AS name,
         v.mobile,
+        v.department,
         COALESCE(SUM(
             TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
             (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END))
             , 0)
         AS total_points
       FROM volunteers v
-      LEFT JOIN service_records s ON v.id = s.volunteer_id
-      WHERE YEAR(s.service_date) = ?
-      GROUP BY v.id
-      ORDER BY total_points DESC
-    `, req.params.year)
+      LEFT JOIN service_records s ON v.id = s.volunteer_id AND YEAR(s.service_date) = ?
+      WHERE 1=1
+    `
+    const params = [req.params.year]
+    
+    // 如果提供了部门参数，添加部门筛选条件
+    if (department) {
+      query += ' AND v.department = ?'
+      params.push(department)
+    }
+    
+    // 只包含有该年份服务记录的志愿者
+    query += ' AND s.service_date IS NOT NULL'
+    query += ' GROUP BY v.id ORDER BY total_points DESC'
+    
+    const [rows] = await pool.query(query, params)
 
     res.json(rows.map(item => ({
       ...item,
@@ -326,6 +340,22 @@ app.get('/api/services/summary/:year', async (req, res) => {
     })))
   } catch (err) {
     res.status(500).json({ error: '获取积分汇总失败' })
+  }
+})
+
+// 获取所有部门列表
+app.get('/api/departments', async (req, res) => {
+  try {
+    const [rows] = await pool.query(`
+      SELECT DISTINCT department 
+      FROM volunteers 
+      WHERE department IS NOT NULL AND department != ''
+      ORDER BY department
+    `)
+    res.json(rows.map(row => row.department))
+  } catch (err) {
+    console.error('获取部门列表失败:', err)
+    res.status(500).json({ error: '获取部门列表失败' })
   }
 })
 
