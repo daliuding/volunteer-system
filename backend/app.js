@@ -226,14 +226,17 @@ app.post('/api/service-registery', async (req, res) => {
   }
 })
 
-// 获取所有志愿者积分汇总
+// 获取所有志愿者积分汇总（历史总排名）
+// 支持可选的部门筛选（通过 query 参数 department）
 app.get('/api/services/summary', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const { department } = req.query
+    let query = `
       SELECT 
         v.id,
         v.real_name AS name,
         v.mobile,
+        v.department,
         COALESCE(SUM(
             TIMESTAMPDIFF(HOUR, s.start_time, s.end_time) +
             (CASE WHEN TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) % 60 >= 30 THEN 1 ELSE 0 END))
@@ -241,9 +244,19 @@ app.get('/api/services/summary', async (req, res) => {
             AS total_points
       FROM volunteers v
       LEFT JOIN service_records s ON v.id = s.volunteer_id
-      GROUP BY v.id
-      ORDER BY total_points DESC
-    `)
+      WHERE 1=1
+    `
+    const params = []
+    
+    // 如果提供了部门参数，添加部门筛选条件
+    if (department) {
+      query += ' AND v.department = ?'
+      params.push(department)
+    }
+    
+    query += ' GROUP BY v.id ORDER BY total_points DESC'
+    
+    const [rows] = await pool.query(query, params)
     res.json(rows.map(item => ({
       ...item,
       total_points: item.total_points || 0 // 处理null值

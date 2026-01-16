@@ -3,101 +3,86 @@
     <el-card>
       <h2>志愿服务历史总排名(所有年度总计)</h2>
       <el-form :inline="true" @submit.native.prevent>
-        <el-form-item label="输入志愿者姓名">
-          <el-input
-              v-model="selectedVolunteer"
-              placeholder="请输入姓名"
-              style="width: 200px"
-              @keyup.enter="handleSelectChange"
+        <el-form-item label="选择部门">
+          <el-select
+              v-model="selectedDepartment"
+              placeholder="请选择部门"
+              style="width: 250px"
               clearable
+              @change="handleDepartmentChange"
               v-loading="loading"
               :disabled="loading"
-          ></el-input>
+          >
+            <el-option
+              v-for="dept in departmentOptions"
+              :key="dept"
+              :label="dept"
+              :value="dept"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
 
-      <!-- 详细表格 -->
-      <template v-if="detailData.detail.length > 0">
-          <div class="total-points">
-            积分总和：<strong>{{ detailData.total_points }}</strong>
-            ,  姓名：<strong>{{ selectedVolunteer }}</strong>
-          </div>
-          <el-table 
-            :data="detailData.detail"
-            border
-            stripe
-            style="width: 100%"
-          >
-            <el-table-column prop="name" label="姓名" width="150" />
-            <el-table-column prop="mobile" label="电话" width="200" />
-            <el-table-column prop="service_date" label="服务日期" width="120">
-              <template #default="{row}">
-                {{ formatDate(row.service_date) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="服务时间" width="200">
-              <template #default="{row}">
-                {{ row.start_time }} - {{ row.end_time }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="points" label="积分" width="100">
-              <template #default="{row}">
-                {{ row.points.toFixed(1) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="content" label="服务内容" />
-          </el-table>
-      </template>
-
       <!-- 汇总表格 -->
-      <template v-else>
-        <el-row :gutter="20" >
-          <el-col>
-            <el-button type="primary" @click="exportExcel" size="large" >导出Excel</el-button>
-          </el-col>
-        </el-row>
+      <el-row :gutter="20" >
+        <el-col>
+          <el-button type="primary" @click="exportExcel" size="large" :loading="exportLoading">导出Excel</el-button>
+        </el-col>
+      </el-row>
 
-        <el-table 
-          :data="summaryData"
-          border
-          stripe
-          style="width: 100%; margin-top: 20px;"
-        >
-          <el-table-column prop="name" label="姓名" width="150" />
-          <el-table-column prop="mobile" label="电话" width="200" />
-          <el-table-column label="总积分">
-            <template #default="{row}">
-              {{ row.total_points }}
-            </template>
-          </el-table-column>
-        </el-table>
-
-      </template>
+      <el-table 
+        :data="summaryData"
+        border
+        stripe
+        style="width: 100%; margin-top: 20px;"
+        v-loading="loading"
+      >
+        <el-table-column prop="name" label="姓名" width="150" />
+        <el-table-column prop="department" label="部门" width="150" />
+        <el-table-column prop="mobile" label="电话" width="200" />
+        <el-table-column label="总积分">
+          <template #default="{row}">
+            {{ row.total_points }}
+          </template>
+        </el-table-column>
+      </el-table>
     </el-card>
   </div>
 </template>
 
   <script setup>
-  import { ref, onMounted, watch } from 'vue';
+  import { ref, onMounted } from 'vue';
   import axios from 'axios'
   import { ElMessage } from 'element-plus'
   import { utils, writeFile } from 'xlsx'
 
   // 数据状态
   const summaryData = ref([])
-  const detailData = ref({ detail: [], total_points: 0 }) 
-  const volunteerOptions = ref([])
-  const selectedVolunteer = ref("")
+  const departmentOptions = ref([])
+  const selectedDepartment = ref("")
   const loading = ref(false)
   const exportLoading = ref(false)
 
-  // 加载初始数据
+  // 加载部门列表
+  const loadDepartments = async () => {
+    try {
+      const response = await axios.get('http://localhost:3000/api/departments')
+      departmentOptions.value = response.data
+    } catch (err) {
+      ElMessage.error('加载部门列表失败')
+    }
+  }
+
+  // 加载积分汇总数据
   const loadSummary = async () => {
     try {
       loading.value = true
-      const response = await axios.get('http://localhost:3000/api/services/summary')
+      const params = {}
+      if (selectedDepartment.value) {
+        params.department = selectedDepartment.value
+      }
+      const response = await axios.get('http://localhost:3000/api/services/summary', { params })
       summaryData.value = response.data
-      volunteerOptions.value = response.data
     } catch (err) {
       ElMessage.error('加载积分汇总失败')
     } finally {
@@ -105,39 +90,9 @@
     }
   }
 
-  // 加载详细数据
-  const handleSelectChange = async() => {
-    if (!selectedVolunteer.value) {
-      detailData.value = { detail: [], total_points: 0 }
-      return;
-    }
-    try {
-      loading.value = true
-      const response = await axios.get(`http://localhost:3000/api/services/detail/${selectedVolunteer.value}`)
-      detailData.value = response.data
-    } catch (err) {
-      if (err.response.status === 404) {
-        ElMessage.error('未找到匹配的志愿者')
-      } else {
-        ElMessage.error('加载服务记录失败')
-      }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  watch(selectedVolunteer, (newValue) => {
-    if (!newValue) {
-      // 当输入框内容被清空时，重新加载全部数据
-      detailData.value = { detail: [], total_points: 0 };
-    }
-   });
-
-  // 日期格式化
-  const formatDate = (dateStr) => {
-    if (!dateStr) return ''
-    // 2022-01-01T00:00:00.000Z 处理为 2022-01-01
-    return new Date(dateStr).toLocaleDateString()
+  // 部门选择变化时重新加载数据
+  const handleDepartmentChange = () => {
+    loadSummary()
   }
 
   const exportExcel = () => {
@@ -146,6 +101,7 @@
         // 准备数据
         const exportData = summaryData.value.map(item => ({
         '姓名': item.name,
+        '部门': item.department || '',
         '电话': item.mobile,
         '总积分': item.total_points
         }))
@@ -155,7 +111,11 @@
         utils.book_append_sheet(workbook, worksheet, "积分汇总")
 
         // 生成文件并下载
-        writeFile(workbook, `志愿服务积分汇总_${new Date().toLocaleDateString()}.xlsx`, {
+        let fileName = '志愿服务积分汇总'
+        if (selectedDepartment.value) {
+          fileName = `${selectedDepartment.value}_${fileName}`
+        }
+        writeFile(workbook, `${fileName}_${new Date().toLocaleDateString()}.xlsx`, {
         compression: true
         })
 
@@ -168,6 +128,7 @@
   }
 
   onMounted(() => {
+    loadDepartments()
     loadSummary()
   })
   </script>
