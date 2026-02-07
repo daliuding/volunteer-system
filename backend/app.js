@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
@@ -7,12 +8,12 @@ const app = express() // 创建 express 应用
 app.use(cors()) // 允许跨域
 app.use(bodyParser.json()) // 解析 JSON 请求体
 
-// 真实数据库连接池
+// 真实数据库连接池（可通过项目根目录 .env 覆盖，如 MYSQL_PASSWORD=你的密码）
 const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'volunteer_db',
+  host: process.env.MYSQL_HOST || 'localhost',
+  user: process.env.MYSQL_USER || 'root',
+  password: process.env.MYSQL_PASSWORD || '1234',
+  database: process.env.MYSQL_DATABASE || 'volunteer_db',
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0
