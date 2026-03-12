@@ -1,6 +1,6 @@
 @echo off
 chcp 65001 >nul
-title 志愿者服务管理系统 - Node 单机
+title 志愿者服务管理系统 - Node 单机（部署模式）
 
 where node >nul 2>nul
 if %errorlevel% neq 0 (
@@ -34,13 +34,30 @@ if not exist "frontend\node_modules" (
     )
 )
 
-echo 正在启动后端与前端...
-echo 启动成功后，请在浏览器访问: http://localhost:5173
+if not exist "frontend\dist" (
+    echo 正在打包前端（生成 dist）...
+    cd frontend
+    call npm run build
+    cd ..
+    if %errorlevel% neq 0 (
+        echo 前端打包失败，请检查网络或参考安装指南。
+        pause
+        exit /b 1
+    )
+) else (
+    echo 检测到 frontend\dist，跳过打包；若修改了前端代码请先手动在 frontend 目录执行 npm run build。
+)
+
+echo.
+echo 正在启动服务（API + 前端页面，仅占用 3000 端口）...
+echo 本机访问: http://localhost:3000
+echo 其他电脑访问: http://本机IP:3000
 echo 默认账号: admin  密码: 1234
 echo 关闭本窗口即可停止服务。
 echo.
 
-start "" cmd /c "timeout /t 8 /nobreak >nul && start http://localhost:5173"
-call npm run dev
+start "" cmd /c "timeout /t 5 /nobreak >nul && start http://localhost:3000"
+
+node backend\app.js
 
 pause

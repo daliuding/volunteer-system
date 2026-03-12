@@ -105,7 +105,7 @@
       detailData.value = []
       try {
         loading.value = true
-        const response = await axios.get('http://localhost:3000/api/services/year-volunteer-detail', { params })
+        const response = await axios.get('/api/services/year-volunteer-detail', { params })
         detailData.value = response.data
         if (response.data.length === 0) {
           ElMessage.warning('没有找到相关服务记录')

@@ -57,7 +57,7 @@
   const submitForm = async () => {
     try {
       // 将用户信息提交到数据库
-      const response = await axios.post('http://localhost:3000/api/register-simple',
+      const response = await axios.post('/api/register-simple',
         {
           name: registerForm.name,
           id_card: registerForm.id_card,

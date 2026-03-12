@@ -59,14 +59,14 @@ const loading = ref(false);
 const fetchAllVolunteers = async () => {
     loading.value = true;
     try {
-        const response = await axios.get("http://localhost:3000/api/volunteers");
+        const response = await axios.get("/api/volunteers");
         if (response.data.success) {
             tableData.value = response.data.data;
         } else {
-            ElMessage.error("加载志愿者数据失败");
+            ElMessage.error("加载志愿者数据失败。。");
         }
     } catch (error) {
-        ElMessage.error("加载志愿者数据失败");
+        ElMessage.error("加载志愿者数据失败！");
     } finally {
         loading.value = false;
     }
@@ -86,8 +86,8 @@ const handleQuery = async () => {
 
         const queryString = params.toString();
         const url = queryString
-            ? `http://localhost:3000/api/volunteers/query?${queryString}`
-            : "http://localhost:3000/api/volunteers";
+            ? `/api/volunteers/query?${queryString}`
+            : "/api/volunteers";
 
         const response = await axios.get(url);
         if (response.data.success) {

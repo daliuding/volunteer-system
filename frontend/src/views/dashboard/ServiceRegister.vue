@@ -181,7 +181,7 @@
   // 加载所有志愿者列表
   const loadVolunteers = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/api/volunteers")
+      const response = await axios.get("/api/volunteers")
         if (response.data.success) {
             volunteerList.value = response.data.data
         } 
@@ -254,7 +254,7 @@
       }
       
       // 使用找到的 volunteer_id 提交记录
-      const response = await axios.post('http://localhost:3000/api/service-registery', {
+      const response = await axios.post('/api/service-registery', {
         volunteer_id: volunteer.id,
         service_date: form.service_date,
         start_time: form.start_time,

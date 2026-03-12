@@ -66,7 +66,7 @@
   // 加载部门列表
   const loadDepartments = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/departments')
+      const response = await axios.get('/api/departments')
       departmentOptions.value = response.data
     } catch (err) {
       ElMessage.error('加载部门列表失败')
@@ -81,7 +81,7 @@
       if (selectedDepartment.value) {
         params.department = selectedDepartment.value
       }
-      const response = await axios.get('http://localhost:3000/api/services/summary', { params })
+      const response = await axios.get('/api/services/summary', { params })
       summaryData.value = response.data
     } catch (err) {
       ElMessage.error('加载积分汇总失败')

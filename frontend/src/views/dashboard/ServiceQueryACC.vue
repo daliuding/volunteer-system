@@ -75,7 +75,7 @@
     // 加载部门列表
     const loadDepartments = async () => {
       try {
-        const response = await axios.get('http://localhost:3000/api/departments')
+        const response = await axios.get('/api/departments')
         departmentOptions.value = response.data
       } catch (err) {
         console.error('Error fetching departments:', err)
@@ -93,7 +93,7 @@
       summaryData.value = []
       try {
         loading.value = true
-        let url = `http://localhost:3000/api/services/summary/${selectedYear.value}`
+        let url = `/api/services/summary/${selectedYear.value}`
         // 如果选择了部门，添加到查询参数中
         if (selectedDepartment.value) {
           url += `?department=${encodeURIComponent(selectedDepartment.value)}`

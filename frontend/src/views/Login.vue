@@ -30,7 +30,7 @@
 
   const handleLogin = async () => {
   try {
-    const response = await axios.post('http://localhost:3000/api/login', form)
+    const response = await axios.post('/api/login', form)
     if (response.data.success) {
       // 服务器反馈令牌token
       localStorage.setItem('userToken', response.data.token) // 将token保存到本地存储
@@ -41,7 +41,9 @@
       ElMessage.error('用户名或密码错误')
     }
   } catch (err) {
-    ElMessage.error('登录失败!!')
+    // 网络异常或服务器返回 4xx/5xx 时会进入这里
+    const msg = err.response?.data?.message || err.response?.data?.error || err.message || '网络异常，请检查能否访问服务器'
+    ElMessage.error('登录失败：' + msg)
   }
 }
   

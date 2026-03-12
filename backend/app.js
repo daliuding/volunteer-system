@@ -5,6 +5,7 @@ const cors = require('cors')
 const mysql = require('mysql2/promise') // 使用 mysql2/promise 驱动
 const app = express() // 创建 express 应用
 
+/* 若生产环境，服务器运行在本地3000端口，前端Vue运行在5173端口，可实时修改前端代码，需要跨域 */
 app.use(cors()) // 允许跨域
 app.use(bodyParser.json()) // 解析 JSON 请求体
 
@@ -438,7 +439,17 @@ app.get('/api/services/year-volunteer-detail', async (req, res) => {
   }
 })
 
+/* 前端部署环境下(即先把前端npm run build生成dist静态页面，再用node app.js启动后端),
+   不需要CORS跨域，但需要以下代码来访问前端静态文件 */
+// 前端静态文件与 Vue history 模式（必须放在所有 API 路由之后，否则会拦截 /api/*）
+const path = require('path')
+app.use(express.static(path.join(__dirname, '../frontend/dist')))
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend/dist/index.html'))
+})
 
-app.listen(3000, () => {
-  console.log('后端服务运行在 http://localhost:3000')
+app.listen(3000, '0.0.0.0', () => {
+  console.log('服务器运行在:')
+  console.log('http://localhost:3000')
+  console.log('http://当前电脑IP:3000')
 })
